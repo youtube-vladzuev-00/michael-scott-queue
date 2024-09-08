@@ -16,12 +16,12 @@ public final class ConcurrentQueue<E> {
         while (true) {
             final Node<E> previousTail = tail.get();
             if (previousTail.next.compareAndSet(null, newNode)) {
-                break;
+                tail.compareAndSet(previousTail, newNode);
+                return;
             } else {
                 tail.compareAndSet(previousTail, previousTail.next.get());
             }
         }
-        tail.set(newNode);
     }
 
     public Optional<E> dequeue() {
