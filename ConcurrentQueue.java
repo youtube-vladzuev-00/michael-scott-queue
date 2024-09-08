@@ -6,12 +6,12 @@ import static java.util.Optional.empty;
 import static java.util.Optional.of;
 
 public final class ConcurrentQueue<E> {
-    private volatile Node<E> head;
+    private final AtomicReference<Node<E>> head;
     private final AtomicReference<Node<E>> tail;
 
     public ConcurrentQueue() {
         final Node<E> dummyNode = new Node<>();
-        head = dummyNode;
+        head = new AtomicReference<>(dummyNode);
         tail = new AtomicReference<>(dummyNode);
     }
 
@@ -30,17 +30,24 @@ public final class ConcurrentQueue<E> {
 
     public Optional<E> dequeue() {
         while (true) {
-            final Node<E> previousHead = head;
+            final Node<E> previousHead = head.get();
             final Node<E> nextHead = previousHead.next.get();
             if (previousHead == tail.get()) {
                 return empty();
             }
             final E element = nextHead.value.get();
             if (element != null && nextHead.value.compareAndSet(element, null)) {
-                head = nextHead;
-                previousHead.next.set(previousHead);
+                updateHead(previousHead, nextHead);
                 return of(element);
+            } else {
+                updateHead(previousHead, nextHead);
             }
+        }
+    }
+
+    private void updateHead(final Node<E> previous, final Node<E> next) {
+        if (head.compareAndSet(previous, next)) {
+            previous.next.set(previous);
         }
     }
 
