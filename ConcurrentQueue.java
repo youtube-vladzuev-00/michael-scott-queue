@@ -2,6 +2,8 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 public final class ConcurrentQueue<E> {
     private volatile Node<E> head;
@@ -27,7 +29,16 @@ public final class ConcurrentQueue<E> {
     }
 
     public Optional<E> dequeue() {
-        throw new UnsupportedOperationException();
+        final Node<E> previousHead = head;
+        final Node<E> nextHead = previousHead.next.get();
+        if (previousHead == tail.get()) {
+            return empty();
+        }
+        final E element = nextHead.value;
+        nextHead.value = null;
+        head = nextHead;
+        previousHead.next.set(previousHead);
+        return of(element);
     }
 
     private static final class Node<E> {
