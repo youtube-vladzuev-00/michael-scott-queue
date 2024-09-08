@@ -12,7 +12,12 @@ public final class ConcurrentQueue<E> {
 
     public void enqueue(final E element) {
         final Node<E> newNode = new Node<>(element);
-        tail.next = newNode;
+        while (true) {
+            if (tail.next == null) {
+                tail.next = newNode;
+                break;
+            }
+        }
         tail = newNode;
     }
 
