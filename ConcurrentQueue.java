@@ -1,6 +1,8 @@
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static java.util.Objects.requireNonNull;
+
 public final class ConcurrentQueue<E> {
     private volatile Node<E> head;
     private final AtomicReference<Node<E>> tail;
@@ -12,7 +14,7 @@ public final class ConcurrentQueue<E> {
     }
 
     public void enqueue(final E element) {
-        final Node<E> newNode = new Node<>(element);
+        final Node<E> newNode = new Node<>(requireNonNull(element));
         while (true) {
             final Node<E> previousTail = tail.get();
             if (previousTail.next.compareAndSet(null, newNode)) {
