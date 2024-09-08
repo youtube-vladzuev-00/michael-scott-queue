@@ -31,9 +31,14 @@ public final class ConcurrentQueue<E> {
     public Optional<E> dequeue() {
         while (true) {
             final Node<E> previousHead = head.get();
+            final Node<E> previousTail = tail.get();
             final Node<E> nextHead = previousHead.next.get();
-            if (previousHead == tail.get()) {
-                return empty();
+            if (previousHead == previousTail) {
+                if (nextHead == null) {
+                    return empty();
+                } else {
+                    tail.compareAndSet(previousTail, nextHead);
+                }
             }
             final E element = nextHead.value.get();
             if (element != null && nextHead.value.compareAndSet(element, null)) {
