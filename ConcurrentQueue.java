@@ -11,7 +11,9 @@ public final class ConcurrentQueue<E> {
     }
 
     public void enqueue(final E element) {
-        throw new UnsupportedOperationException();
+        final Node<E> newNode = new Node<>(element);
+        tail.next = newNode;
+        tail = newNode;
     }
 
     public Optional<E> dequeue() {
