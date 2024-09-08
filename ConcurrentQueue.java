@@ -3,24 +3,25 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public final class ConcurrentQueue<E> {
     private volatile Node<E> head;
-    private volatile Node<E> tail;
+    private final AtomicReference<Node<E>> tail;
 
     public ConcurrentQueue() {
         final Node<E> dummyNode = new Node<>();
         head = dummyNode;
-        tail = dummyNode;
+        tail = new AtomicReference<>(dummyNode);
     }
 
     public void enqueue(final E element) {
         final Node<E> newNode = new Node<>(element);
         while (true) {
-            if (tail.next.compareAndSet(null, newNode)) {
+            final Node<E> previousTail = tail.get();
+            if (previousTail.next.compareAndSet(null, newNode)) {
                 break;
             } else {
-                tail = tail.next.get();
+                tail.compareAndSet(previousTail, previousTail.next.get());
             }
         }
-        tail = newNode;
+        tail.set(newNode);
     }
 
     public Optional<E> dequeue() {
