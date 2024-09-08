@@ -29,28 +29,32 @@ public final class ConcurrentQueue<E> {
     }
 
     public Optional<E> dequeue() {
-        final Node<E> previousHead = head;
-        final Node<E> nextHead = previousHead.next.get();
-        if (previousHead == tail.get()) {
-            return empty();
+        while (true) {
+            final Node<E> previousHead = head;
+            final Node<E> nextHead = previousHead.next.get();
+            if (previousHead == tail.get()) {
+                return empty();
+            }
+            final E element = nextHead.value.get();
+            if (element != null && nextHead.value.compareAndSet(element, null)) {
+                head = nextHead;
+                previousHead.next.set(previousHead);
+                return of(element);
+            }
         }
-        final E element = nextHead.value;
-        nextHead.value = null;
-        head = nextHead;
-        previousHead.next.set(previousHead);
-        return of(element);
     }
 
     private static final class Node<E> {
-        private volatile E value;
+        private final AtomicReference<E> value;
         private final AtomicReference<Node<E>> next;
 
         public Node() {
+            value = new AtomicReference<>();
             next = new AtomicReference<>();
         }
 
         public Node(final E value) {
-            this.value = value;
+            this.value = new AtomicReference<>(value);
             next = new AtomicReference<>();
         }
     }
