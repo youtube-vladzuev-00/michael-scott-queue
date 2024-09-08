@@ -16,6 +16,8 @@ public final class ConcurrentQueue<E> {
         while (true) {
             if (tail.next.compareAndSet(null, newNode)) {
                 break;
+            } else {
+                tail = tail.next.get();
             }
         }
         tail = newNode;
